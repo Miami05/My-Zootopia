@@ -1,10 +1,9 @@
-# animals_to_html.py
 import json
 from pathlib import Path
 
-DATA     = Path("animals_data.json")
+DATA = Path("animals_data.json")
 TEMPLATE = Path("animals_template.html")
-OUTPUT   = Path("animals.html")
+OUTPUT = Path("animals.html")
 
 def load_animals(path: Path):
     data = json.loads(path.read_text(encoding="utf-8"))
@@ -19,23 +18,22 @@ def make_animals_text(animals):
         characteristic = a.get("characteristics") or {}
         lines = []
         if a.get("name"):
-            lines.append(f"Name: {a['name']}")
+            lines.append(f"Name: {a['name']}<br/>\n")
         if characteristic.get("diet"):
-            lines.append(f"Diet: {characteristic['diet']}")
+            lines.append(f"Diet: {characteristic['diet']}<br/>\n")
         locs = a.get("locations")
-        if isinstance(locs, (list, tuple)):
-            cleaned = [str(x).strip() for x in locs if str(x).strip()]
+        if isinstance(locs, (list, tuple)) and locs:
+            cleaned = [x.strip() for x in locs if isinstance(x, str) and x.strip()]
             if cleaned:
                 label = "Location" if len(cleaned) == 1 else "Locations"
-                lines.append(f"{label}: {', '.join(cleaned)}")
+                lines.append(f"{label}: {', '.join(cleaned)}<br/>\n")
         elif isinstance(locs, str) and locs.strip():
-            lines.append(f"Location: {locs.strip()}")
+            lines.append(f"Location: {locs.strip()}<br/>\n")
         if characteristic.get("type"):
-            lines.append(f"Type: {characteristic['type']}")
+            lines.append(f"Type: {characteristic['type']}<br/>\n")
         if lines:
-            blocks.append("\n".join(lines))
-
-    return "\n\n".join(blocks)
+            blocks.append('<li class="cards__item">\n' + "".join(lines) + '</li>\n')
+    return "".join(blocks)
 
 def main():
     animals = load_animals(DATA)
