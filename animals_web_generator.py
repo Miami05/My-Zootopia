@@ -1,42 +1,48 @@
+# animals_to_html.py
 import json
+from pathlib import Path
 
-def load_data(file_path):
-    """ Loads a JSON file """
-    with open(file_path, "r", encoding="utf-8") as handle:
-        return json.load(handle)
+DATA     = Path("animals_data.json")
+TEMPLATE = Path("animals_template.html")
+OUTPUT   = Path("animals.html")
 
+def load_animals(path: Path):
+    data = json.loads(path.read_text(encoding="utf-8"))
+    return data["animals"] if isinstance(data, dict) and "animals" in data else data
 
-def print_animals_data(animals_data):
-    """Print a simple report for each animal in `animals_data`.
-    Only prints fields that exist and are non-empty."""
-    if not animals_data:
-        return
-    if isinstance(animals_data, dict) and "animals" in animals_data:
-        animals_data = animals_data["animals"]
-    for animal in animals_data:
-        if not isinstance(animal, dict):
+def make_animals_text(animals):
+    """Return a text block: only existing fields; print all locations (comma-joined)."""
+    blocks = []
+    for a in animals:
+        if not isinstance(a, dict):
             continue
-        characteristics = animal.get("characteristics") or {}
-        if animal.get("name"):
-            print(f"Name: {animal['name']}")
-        if characteristics.get("diet"):
-            print(f"Diet: {characteristics['diet']}")
-        locs = animal.get("locations")
+        characteristic = a.get("characteristics") or {}
+        lines = []
+        if a.get("name"):
+            lines.append(f"Name: {a['name']}")
+        if characteristic.get("diet"):
+            lines.append(f"Diet: {characteristic['diet']}")
+        locs = a.get("locations")
         if isinstance(locs, (list, tuple)):
             cleaned = [str(x).strip() for x in locs if str(x).strip()]
             if cleaned:
                 label = "Location" if len(cleaned) == 1 else "Locations"
-                print(f"{label}: {', '.join(cleaned)}")
+                lines.append(f"{label}: {', '.join(cleaned)}")
         elif isinstance(locs, str) and locs.strip():
-            print(f"Location: {locs.strip()}")
-        if characteristics.get("type"):
-            print(f"Type: {characteristics['type']}")
-        print()
+            lines.append(f"Location: {locs.strip()}")
+        if characteristic.get("type"):
+            lines.append(f"Type: {characteristic['type']}")
+        if lines:
+            blocks.append("\n".join(lines))
 
+    return "\n\n".join(blocks)
 
 def main():
-    animals_data = load_data('animals_data.json')
-    print_animals_data(animals_data)
+    animals = load_animals(DATA)
+    content = make_animals_text(animals)
+    template = TEMPLATE.read_text(encoding="utf-8")
+    html = template.replace("__REPLACE_ANIMALS_INFO__", content)
+    OUTPUT.write_text(html, encoding="utf-8")
 
 if __name__ == "__main__":
     main()
