@@ -22,38 +22,55 @@ def human_join(items):
     return f"{', '.join(items[:-1])} and {items[-1]}"
 
 def make_animals_text(animals):
-    """Return a text block: only existing fields; print all locations (comma-joined)."""
+    """Return HTML <li> blocks for each animal, printing only existing fields.
+    - Name, Diet, Type
+    - Locations: prints all if more than one
+    """
+    if isinstance(animals, dict) and isinstance(animals.get("animals"), list):
+        animals_iter = animals["animals"]
+    else:
+        animals_iter = animals
     parts = []
-    for a in animals:
-        if not isinstance(a, dict):
+    for animal in animals_iter or []:
+        if not isinstance(animal, dict):
             continue
-        ch = a.get("characteristics") or {}
-        name = a.get("name")
+        ch = animal.get("characteristics") or {}
+        name = animal.get("name")
         diet = ch.get("diet")
         a_type = ch.get("type")
-        locs = a.get("locations")
-        loc_text = None
+        loc_text = ""
+        locs = animal.get("locations")
         if isinstance(locs, (list, tuple)):
             loc_text = human_join(locs)
         elif isinstance(locs, str) and locs.strip():
             loc_text = locs.strip()
-        lines = []
+        meta_items = []
         if diet:
-            lines.append(f'      <strong>Diet:</strong> {diet}<br/>\n')
+            meta_items.append(
+                '          <li class="card__meta-item"><strong class="card__meta-label">Diet:</strong> '
+                f'{diet}</li>\n'
+            )
         if loc_text:
-            lines.append(f'      <strong>Location:</strong> {loc_text}<br/>\n')
+            meta_items.append(
+                '          <li class="card__meta-item"><strong class="card__meta-label">Location:</strong> '
+                f'{loc_text}</li>\n'
+            )
         if a_type:
-            lines.append(f'      <strong>Type:</strong> {a_type}<br/>\n')
-        if name or lines:
-            item = ['<li class="cards__item">\n']
-            if name:
-                item.append(f'  <div class="card__title">{name}</div>\n')
-            item.append('  <p class="card__text">\n')
-            if lines:
-                item.extend(lines)
-            item.append('  </p>\n')
-            item.append('</li>\n')
-            parts.append("".join(item))
+            meta_items.append(
+                '          <li class="card__meta-item"><strong class="card__meta-label">Type:</strong> '
+                f'{a_type}</li>\n'
+            )
+        if not name and not meta_items:
+            continue
+        parts.append('<li class="cards__item">\n')
+        if name:
+            parts.append(f'  <div class="card__title">{name}</div>\n')
+        parts.append('  <div class="card__text">\n')
+        parts.append('    <ul class="card__meta">\n')
+        parts.extend(meta_items)
+        parts.append('    </ul>\n')
+        parts.append('  </div>\n')
+        parts.append('</li>\n')
     return "".join(parts)
 
 def main():
