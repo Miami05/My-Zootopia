@@ -10,17 +10,6 @@ def load_animals(path: Path):
     data = json.loads(path.read_text(encoding="utf-8"))
     return data["animals"] if isinstance(data, dict) and "animals" in data else data
 
-
-def human_join(items):
-    items = [item for item in items if isinstance(item, str) and item.strip()]
-    if not items:
-        return ""
-    if len(items) == 1:
-        return items[0]
-    if len(items) == 2:
-        return f"{items[0]} and {items[1]}"
-    return f"{', '.join(items[:-1])} and {items[-1]}"
-
 def make_animals_text(animals):
     """Return HTML <li> blocks for each animal, printing only existing fields.
     - Name, Diet, Type
